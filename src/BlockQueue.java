@@ -3,54 +3,106 @@ import java.io.Serializable;
 
 public class BlockQueue<T> {
 
-    private class Node<T> implements Serializable {
+    public class Node<E> implements Serializable {
         private final String TAG = getClass().getSimpleName();
         private Node next = null;
-        private int index = -1;
-        private T value = null;
+        private E value = null;
 
-        Node(){};
-        Node(T t){
-            value = t;
+        Node(){}
+        Node(E e,Node<E> next){
+            value = e;
+            this.next = next;
         }
-        T getValue() {
+        E getValue() {
             return value;
         }
-        void setValue(T t) {
-            value = t;
+        void setValue(E e) {
+            value = e;
         }
 
         @Override
         public String toString(){
-            return "Node - " + index + " - " + value.toString();
+            return value.toString();
         }
 
         @Override
         public int hashCode() {
-            return value.hashCode() + index;
+            return value.hashCode() + TAG.hashCode();
         }
     }
 
     private int size = 0;
-    private Node<T> node = null;
+    private Node<T> first = null;
+    private Node<T> last = null;
 
+    /**
+     *
+     * @param t
+     * @return
+     */
     public Integer put(T t) {
-        if (size == 0) {
-            node = new Node<>(t);
-            node.next = null;
-            node.index = 0;
-        } else {
-            Node<T> next = new Node<>(t);
-            next.next = null;
-            next.index = size + 1;
-            node.next = next;
-            node = next;
+        if (first == null){
+            first = new Node<>(t,null);
+        }else{
+            last = first;
+            first = new Node<>(t,last);
         }
         size++;
         return size;
     }
 
+    /**
+     *
+     * @return
+     */
     public Node<T> poll(){
-        return node;
+        if (size <= 1) {
+            size = 0;
+            return first;
+        }
+        else {
+            size--;
+            Node<T> tmp = first;
+            first = first.next;
+            return tmp;
+        }
     }
+
+    /**
+     *
+     * @param index
+     * @return
+     */
+    public Node<T> get(int index){
+        if (index >= size)
+            return null;
+        Node<T> tmp = first;
+        for (int i = 0;i < size;i++) {
+            if (i == index) {
+                break;
+            }else {
+                tmp = tmp.next;
+            }
+        }
+        return tmp;
+    }
+
+    @Override
+    public String toString(){
+        StringBuilder stringBuilder = new StringBuilder();
+        Node<T> tmp = first;
+        stringBuilder.append("size = ").append(size).append("\n");
+        for (int index = 0;index < size; index++){
+            if (tmp != null) {
+                stringBuilder.append("Index = ").append(index)
+                        .append(" Value = ").append(tmp.toString())
+                        .append("\n");
+                tmp = tmp.next;
+            }else
+                break;
+        }
+        return stringBuilder.toString();
+    }
+
+
 }
