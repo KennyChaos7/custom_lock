@@ -4,6 +4,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * 使用 {@link java.util.concurrent.locks.ReentrantLock 重入锁}
+ * 默认是非公平锁
  * @param <T>
  */
 public class BlockQueue<T> {
@@ -42,77 +43,77 @@ public class BlockQueue<T> {
         }
     }
 
-    private int size = 0;
+    private final static boolean IS_FAIR = false;
+    private final static int MAX_CAPACITY = 1000000;
+    private volatile int size = 0;
     private Node<T> first = null;
     private Node<T> last = null;
     private Node<T> tmp = new Node<>();
     private ReentrantLock mLock = null;
-    private final static int MAX_CAPACITY = 1000000;
 
-    public BlockQueue(){
-        mLock = new ReentrantLock(false);
+    /**
+     * 默认创建为非公平锁
+     */
+    public BlockQueue()
+    {
+        this(IS_FAIR);
     }
 
     /**
-     *
-     * @param t
-     * @return
+     * 可以创建非公平和公平锁
+     * @param isFair
+     */
+    public BlockQueue(boolean isFair){
+        mLock = new ReentrantLock(isFair);
+    }
+
+    /**
+     *  压入
+     *  压入到队列的末端
+     * @param t 对应的泛型
+     * @return 返回队列存储量size
      */
     public Integer put(T t) {
-        try {
-            mLock.lock();
-            if (!mLock.isLocked())
-                mLock.lockInterruptibly();
-            if (size < MAX_CAPACITY) {
-                if (first == null) {
-                    first = new Node<>(t, null);
-                } else {
-                    last = first;
-                    first = new Node<>(t, last);
-                }
-                size++;
-
+        mLock.lock();
+        if (size < MAX_CAPACITY) {
+            if (first == null) {
+                first = new Node<>(t, null);
             } else {
-                poll();
-                put(t);
+                last = first;
+                first = new Node<>(t, last);
             }
-        }catch (InterruptedException ex){
-//            ex.printStackTrace();
-        }finally {
-            mLock.unlock();
-            return size;
+            size++;
+        } else {
+            poll();
+            put(t);
         }
+        mLock.unlock();
+        return size;
     }
 
+
     /**
-     *
-     * @return
+     * 弹出
+     * @return 返回的是当前队列里的第一个Node
      */
     public Node<T> poll() {
         mLock.lock();
-        try {
-            if (!mLock.isLocked())
-                mLock.lockInterruptibly();
-            tmp = first;
-            if (size <= 1) {
-                size = 0;
-            } else {
-                size--;
-                first = first.next;
-            }
-        } catch (InterruptedException e) {
-//            e.printStackTrace();
-        }finally {
-            mLock.unlock();
-            return tmp;
+        tmp = first;
+        if (size <= 1) {
+            size = 0;
+        } else {
+            size--;
+            first = first.next;
         }
+        mLock.unlock();
+        return tmp;
     }
 
-
     /**
-     *
-     * @param index
-     * @return
+     * 获得任意索引位置的Node
+     * @param index 索引位置
+     * @return 返回该索引位置的Node
+     * @throws NullPointerException 如果该索引位置未有Node,将抛出该异常
      */
     public Node<T> get(int index){
         if (index >= size)
@@ -128,6 +129,10 @@ public class BlockQueue<T> {
         return tmp;
     }
 
+    /**
+     * 获得当前队列的长度
+     * @return  当前队列的长度
+     */
     public int getSize() {
         return size;
     }
