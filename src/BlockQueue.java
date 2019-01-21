@@ -27,23 +27,30 @@ public class BlockQueue<T> {
 
         @Override
         public String toString(){
-            return value.toString();
+            if (value != null)
+                return value.toString();
+            else
+                return "";
         }
 
         @Override
         public int hashCode() {
-            return value.hashCode() + TAG.hashCode();
+            if (value != null)
+                return Math.toIntExact(Thread.currentThread().getId() + value.hashCode() + TAG.hashCode());
+            else
+                return Math.toIntExact(Thread.currentThread().getId() + TAG.hashCode());
         }
     }
 
     private int size = 0;
     private Node<T> first = null;
     private Node<T> last = null;
+    private Node<T> tmp = new Node<>();
     private ReentrantLock mLock = null;
     private final static int MAX_CAPACITY = 1000000;
 
     public BlockQueue(){
-        mLock = new ReentrantLock();
+        mLock = new ReentrantLock(false);
     }
 
     /**
@@ -52,41 +59,55 @@ public class BlockQueue<T> {
      * @return
      */
     public Integer put(T t) {
-        mLock.lock();
-        if (size < MAX_CAPACITY) {
-            if (first == null) {
-                first = new Node<>(t, null);
-            } else {
-                last = first;
-                first = new Node<>(t, last);
-            }
-            size++;
+        try {
+            mLock.lock();
+            if (!mLock.isLocked())
+                mLock.lockInterruptibly();
+            if (size < MAX_CAPACITY) {
+                if (first == null) {
+                    first = new Node<>(t, null);
+                } else {
+                    last = first;
+                    first = new Node<>(t, last);
+                }
+                size++;
 
-        }else {
-            poll();
-            put(t);
+            } else {
+                poll();
+                put(t);
+            }
+        }catch (InterruptedException ex){
+//            ex.printStackTrace();
+        }finally {
+            mLock.unlock();
+            return size;
         }
-        mLock.unlock();
-        return size;
     }
 
     /**
      *
      * @return
      */
-    public Node<T> poll(){
+    public Node<T> poll() {
         mLock.lock();
-        Node<T> tmp = first;
-        if (size <= 1) {
-            size = 0;
+        try {
+            if (!mLock.isLocked())
+                mLock.lockInterruptibly();
+            tmp = first;
+            if (size <= 1) {
+                size = 0;
+            } else {
+                size--;
+                first = first.next;
+            }
+        } catch (InterruptedException e) {
+//            e.printStackTrace();
+        }finally {
+            mLock.unlock();
+            return tmp;
         }
-        else {
-            size--;
-            first = first.next;
-        }
-        mLock.unlock();
-        return tmp;
     }
+
 
     /**
      *
@@ -96,7 +117,7 @@ public class BlockQueue<T> {
     public Node<T> get(int index){
         if (index >= size)
             return null;
-        Node<T> tmp = first;
+        tmp = first;
         for (int i = 0;i < size;i++) {
             if (i == index) {
                 break;
