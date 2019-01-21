@@ -1,6 +1,11 @@
 import java.io.Serializable;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
-
+/**
+ * 使用 {@link java.util.concurrent.locks.ReentrantLock 重入锁}
+ * @param <T>
+ */
 public class BlockQueue<T> {
 
     public class Node<E> implements Serializable {
@@ -34,6 +39,12 @@ public class BlockQueue<T> {
     private int size = 0;
     private Node<T> first = null;
     private Node<T> last = null;
+    private ReentrantLock mLock = null;
+    private final static int MAX_CAPACITY = 1000000;
+
+    public BlockQueue(){
+        mLock = new ReentrantLock();
+    }
 
     /**
      *
@@ -41,14 +52,20 @@ public class BlockQueue<T> {
      * @return
      */
     public Integer put(T t) {
-        if (first == null){
-            first = new Node<>(t,null);
-        }else{
-            last = first;
-            first = new Node<>(t,last);
+        if (size < MAX_CAPACITY) {
+            if (first == null) {
+                first = new Node<>(t, null);
+            } else {
+                last = first;
+                first = new Node<>(t, last);
+            }
+            size++;
+            return size;
+        }else {
+            poll();
+            put(t);
+            return MAX_CAPACITY;
         }
-        size++;
-        return size;
     }
 
     /**
@@ -85,6 +102,10 @@ public class BlockQueue<T> {
             }
         }
         return tmp;
+    }
+
+    public int getSize() {
+        return size;
     }
 
     @Override
