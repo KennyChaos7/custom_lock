@@ -52,6 +52,7 @@ public class BlockQueue<T> {
      * @return
      */
     public Integer put(T t) {
+        mLock.lock();
         if (size < MAX_CAPACITY) {
             if (first == null) {
                 first = new Node<>(t, null);
@@ -60,12 +61,13 @@ public class BlockQueue<T> {
                 first = new Node<>(t, last);
             }
             size++;
-            return size;
+
         }else {
             poll();
             put(t);
-            return MAX_CAPACITY;
         }
+        mLock.unlock();
+        return size;
     }
 
     /**
@@ -73,16 +75,17 @@ public class BlockQueue<T> {
      * @return
      */
     public Node<T> poll(){
+        mLock.lock();
+        Node<T> tmp = first;
         if (size <= 1) {
             size = 0;
-            return first;
         }
         else {
             size--;
-            Node<T> tmp = first;
             first = first.next;
-            return tmp;
         }
+        mLock.unlock();
+        return tmp;
     }
 
     /**
