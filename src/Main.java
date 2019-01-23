@@ -20,7 +20,8 @@ public class Main {
 //        System.out.println(String.valueOf(mStringBlockQueue.toString()));
 
         //多线程
-        BlockQueue<String> mThreadStringBlockQueue = new BlockQueue<>();
+        BlockQueue<String> mThreadStringBlockQueue = new BlockQueue<>(true);
+//        BlockQueue<String> mThreadStringBlockQueue = new BlockQueue<>(false);
         System.out.println("多线程");
         Random random = new Random();
         for (int i = 0; i < 100; i++) {

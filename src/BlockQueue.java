@@ -8,7 +8,9 @@ import java.util.concurrent.locks.ReentrantLock;
  * @param <T>
  */
 public class BlockQueue<T> {
-
+    private final static int DEFAULT_CAPACITY = 1000000;
+    private final static boolean DEFAULT_ISFAIR = false;
+    
     public class Node<E> implements Serializable {
         private final String TAG = getClass().getSimpleName();
         private Node next = null;
@@ -42,28 +44,26 @@ public class BlockQueue<T> {
                 return Math.toIntExact(Thread.currentThread().getId() + TAG.hashCode());
         }
     }
-
-    private final static boolean IS_FAIR = false;
-    private final static int MAX_CAPACITY = 1000000;
+    
+    private ReentrantLock mLock = null;
+    private int capacity = 0;
     private volatile int size = 0;
     private Node<T> first = null;
     private Node<T> last = null;
     private Node<T> tmp = new Node<>();
-    private ReentrantLock mLock = null;
 
     /**
      * 默认创建为非公平锁
-     */
-    public BlockQueue()
-    {
-        this(IS_FAIR);
-    }
-
-    /**
      * 可以创建非公平和公平锁
-     * @param isFair
      */
-    public BlockQueue(boolean isFair){
+    public BlockQueue(){
+        this(DEFAULT_CAPACITY,DEFAULT_ISFAIR);
+    }
+    public BlockQueue (boolean isFair) {
+        this(DEFAULT_CAPACITY,isFair);
+    }
+    public BlockQueue (int capacity, boolean isFair) {
+        this.capacity = capacity;
         mLock = new ReentrantLock(isFair);
     }
 
@@ -75,7 +75,7 @@ public class BlockQueue<T> {
      */
     public Integer put(T t) {
         mLock.lock();
-        if (size < MAX_CAPACITY) {
+        if (size < capacity) {
             if (first == null) {
                 first = new Node<>(t, null);
             } else {
@@ -153,6 +153,5 @@ public class BlockQueue<T> {
         }
         return stringBuilder.toString();
     }
-
 
 }
