@@ -17,7 +17,6 @@ public class BlockQueue<T> {
     private volatile int size = 0;
     private Node<T> first = null;
     private Node<T> last = null;
-    private Node<T> tmp = new Node<>();
 
     /**
      * 默认创建为非公平锁
@@ -65,7 +64,7 @@ public class BlockQueue<T> {
      */
     public Node<T> poll() {
         mLock.lock();
-        tmp = first;
+        Node<T> tmp = first;
         if (size <= 1) {
             size = 0;
         } else {
@@ -83,9 +82,10 @@ public class BlockQueue<T> {
      * @throws NullPointerException 如果该索引位置未有Node,将抛出该异常
      */
     public Node<T> get(int index){
+        mLock.lock();
         if (index >= size)
             return null;
-        tmp = first;
+        Node<T> tmp = first;
         for (int i = 0;i < size;i++) {
             if (i == index) {
                 break;
@@ -93,6 +93,7 @@ public class BlockQueue<T> {
                 tmp = tmp.next;
             }
         }
+        mLock.unlock();
         return tmp;
     }
 
@@ -124,6 +125,29 @@ public class BlockQueue<T> {
         return false;
     }
 
+    /**
+     * 清除数据
+     */
+    public void clear(){
+        mLock.lock();
+        if (size > 0){
+            for (Node point = first;point != null; point = first){
+                first = first.next;
+            }
+            size = 0;
+            last = null;
+        }
+        mLock.unlock();
+    }
+
+    /**
+     * 是否为空
+     * @return
+     */
+    public boolean isEmpty(){
+        return !(size > 0);
+    }
+
     @Override
     public String toString(){
         StringBuilder stringBuilder = new StringBuilder();
@@ -138,6 +162,7 @@ public class BlockQueue<T> {
             }else
                 break;
         }
+        tmp = null;
         return stringBuilder.toString();
     }
 

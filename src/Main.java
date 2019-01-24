@@ -20,6 +20,11 @@ public class Main {
         System.out.println(String.valueOf(mStringBlockQueue.contains(node)));
         node = new Node<>("ccc");
         System.out.println(String.valueOf(mStringBlockQueue.contains(node)));
+        mStringBlockQueue.clear();
+        System.out.println(String.valueOf(mStringBlockQueue.put("ccc")));
+        System.out.println(String.valueOf(mStringBlockQueue.toString()));
+        System.out.println(String.valueOf(mStringBlockQueue.poll().toString()));
+        System.out.println(String.valueOf(mStringBlockQueue.toString()));
 //        System.out.println(String.valueOf(mStringBlockQueue.get(99).toString()));
 //        System.out.println(String.valueOf(mStringBlockQueue.toString()));
 
