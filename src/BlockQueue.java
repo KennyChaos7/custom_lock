@@ -62,17 +62,16 @@ public class BlockQueue<T> {
      * 弹出
      * @return 返回的是当前队列里的第一个Node
      */
-    public Node<T> poll() {
+    public T poll() {
         mLock.lock();
-        Node<T> tmp = first;
-        if (size <= 1) {
-            size = 0;
-        } else {
+        T t = null;
+        if (size > 0) {
+            t = first.value;
             size--;
             first = first.next;
         }
         mLock.unlock();
-        return tmp;
+        return t;
     }
 
     /**
@@ -107,14 +106,14 @@ public class BlockQueue<T> {
 
     /**
      * 对比是否在队列中
-     * @param target  要对比的节点
+     * @param t
      * @return
      */
-    public boolean contains(Node<T> target)
-    {
-        if (target == null)
+    public boolean contains(T t) {
+        if (t == null)
             return false;
         mLock.lock();
+        Node<T> target = new Node<>(t,null);
         for (Node point = first; point != null; point = point.next){
             if (point.hashCode() == target.hashCode()) {
                 mLock.unlock();
@@ -166,41 +165,30 @@ public class BlockQueue<T> {
         return stringBuilder.toString();
     }
 
-}
-class Node<E> implements Serializable {
-    private final String TAG = getClass().getSimpleName();
-    public Node next = null;
-    public E value = null;
+    class Node<E> implements Serializable {
+        private final String TAG = getClass().getSimpleName();
+        public Node next = null;
+        public E value = null;
 
-    Node(){}
-    Node(E e){
-        value = e;
-        this.next = null;
-    }
-    Node(E e,Node<E> next){
-        value = e;
-        this.next = next;
-    }
-    E getValue() {
-        return value;
-    }
-    void setValue(E e) {
-        value = e;
-    }
+        Node(E e,Node<E> next){
+            value = e;
+            this.next = next;
+        }
 
-    @Override
-    public String toString(){
-        if (value != null)
-            return value.toString();
-        else
-            return "";
-    }
+        @Override
+        public String toString(){
+            if (value != null)
+                return value.toString();
+            else
+                return "";
+        }
 
-    @Override
-    public int hashCode() {
-        if (value != null)
-            return Math.toIntExact(Thread.currentThread().getId() + value.hashCode() + TAG.hashCode());
-        else
-            return Math.toIntExact(Thread.currentThread().getId() + TAG.hashCode());
+        @Override
+        public int hashCode() {
+            if (value != null)
+                return value.hashCode() + TAG.hashCode();
+            else
+                return TAG.hashCode();
+        }
     }
 }
