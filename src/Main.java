@@ -16,13 +16,17 @@ public class Main {
         System.out.println(String.valueOf(mStringBlockQueue.toString()));
         System.out.println(String.valueOf(mStringBlockQueue.get(2).toString()));
         System.out.println(String.valueOf(mStringBlockQueue.toString()));
+        Node<String> node = new Node<>("ggg");
+        System.out.println(String.valueOf(mStringBlockQueue.contains(node)));
+        node = new Node<>("ccc");
+        System.out.println(String.valueOf(mStringBlockQueue.contains(node)));
 //        System.out.println(String.valueOf(mStringBlockQueue.get(99).toString()));
 //        System.out.println(String.valueOf(mStringBlockQueue.toString()));
 
         //多线程
         BlockQueue<String> mThreadStringBlockQueue = new BlockQueue<>(true);
 //        BlockQueue<String> mThreadStringBlockQueue = new BlockQueue<>(false);
-        System.out.println("多线程");
+        System.out.println("\n多线程");
         Random random = new Random();
         for (int i = 0; i < 100; i++) {
             new Thread(()->{

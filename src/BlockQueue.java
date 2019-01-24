@@ -11,40 +11,7 @@ public class BlockQueue<T> {
     private final static int DEFAULT_CAPACITY = 1000000;
     private final static boolean DEFAULT_ISFAIR = false;
     
-    public class Node<E> implements Serializable {
-        private final String TAG = getClass().getSimpleName();
-        private Node next = null;
-        private E value = null;
 
-        Node(){}
-        Node(E e,Node<E> next){
-            value = e;
-            this.next = next;
-        }
-        E getValue() {
-            return value;
-        }
-        void setValue(E e) {
-            value = e;
-        }
-
-        @Override
-        public String toString(){
-            if (value != null)
-                return value.toString();
-            else
-                return "";
-        }
-
-        @Override
-        public int hashCode() {
-            if (value != null)
-                return Math.toIntExact(Thread.currentThread().getId() + value.hashCode() + TAG.hashCode());
-            else
-                return Math.toIntExact(Thread.currentThread().getId() + TAG.hashCode());
-        }
-    }
-    
     private ReentrantLock mLock = null;
     private int capacity = 0;
     private volatile int size = 0;
@@ -137,6 +104,26 @@ public class BlockQueue<T> {
         return size;
     }
 
+    /**
+     * 对比是否在队列中
+     * @param target  要对比的节点
+     * @return
+     */
+    public boolean contains(Node<T> target)
+    {
+        if (target == null)
+            return false;
+        mLock.lock();
+        for (Node point = first; point != null; point = point.next){
+            if (point.hashCode() == target.hashCode()) {
+                mLock.unlock();
+                return true;
+            }
+        }
+        mLock.unlock();
+        return false;
+    }
+
     @Override
     public String toString(){
         StringBuilder stringBuilder = new StringBuilder();
@@ -154,4 +141,41 @@ public class BlockQueue<T> {
         return stringBuilder.toString();
     }
 
+}
+class Node<E> implements Serializable {
+    private final String TAG = getClass().getSimpleName();
+    public Node next = null;
+    public E value = null;
+
+    Node(){}
+    Node(E e){
+        value = e;
+        this.next = null;
+    }
+    Node(E e,Node<E> next){
+        value = e;
+        this.next = next;
+    }
+    E getValue() {
+        return value;
+    }
+    void setValue(E e) {
+        value = e;
+    }
+
+    @Override
+    public String toString(){
+        if (value != null)
+            return value.toString();
+        else
+            return "";
+    }
+
+    @Override
+    public int hashCode() {
+        if (value != null)
+            return Math.toIntExact(Thread.currentThread().getId() + value.hashCode() + TAG.hashCode());
+        else
+            return Math.toIntExact(Thread.currentThread().getId() + TAG.hashCode());
+    }
 }
